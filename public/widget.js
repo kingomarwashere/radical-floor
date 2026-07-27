@@ -5,7 +5,15 @@
 // If the page exposes window.RADICAL_UID, links carry it so identity flows through.
 (function () {
   var BASE = 'https://floor.theradicalparty.com';
-  var uid = (window.RADICAL_UID || localStorage.getItem('radical_user_id') || localStorage.getItem('userId') || '');
+  function resolveUid() {
+    if (window.RADICAL_UID) return window.RADICAL_UID;
+    try {
+      var ru = JSON.parse(localStorage.getItem('radical_user') || 'null');
+      if (ru && ru.id) return ru.id;
+    } catch (e) {}
+    return localStorage.getItem('radical_user_id') || localStorage.getItem('userId') || '';
+  }
+  var uid = resolveUid();
   var suffix = uid ? ('?uid=' + encodeURIComponent(uid)) : '';
 
   var css = `
