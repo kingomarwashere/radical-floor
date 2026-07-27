@@ -44,8 +44,10 @@
   function render(d) {
     var online = (d && d.online) || 0;
     var hot = (d && d.hot && d.hot[0]) || null;
-    var html = '<a class="fp" href="' + BASE + '/' + suffix + '" target="_blank">' +
-      '<span class="fd"></span><span><span class="fn">' + online + '</span> on the floor</span></a>';
+    var pill = online > 0
+      ? '<span class="fd"></span><span><span class="fn">' + online + '</span> on the floor</span>'
+      : '<span class="fd"></span><span>Enter <span class="fn">The Floor</span></span>';
+    var html = '<a class="fp" href="' + BASE + '/' + suffix + '" target="_blank">' + pill + '</a>';
     if (hot && hot.count > 0) {
       var link = BASE + '/#/' + encodeURIComponent(hot.room) + (uid ? ('?uid=' + encodeURIComponent(uid)) : '');
       html += '<a class="hot" href="' + link + '" target="_blank">' +
@@ -59,8 +61,8 @@
 
   function poll() {
     fetch(BASE + '/api/activity').then(function (r) { return r.json(); })
-      .then(function (d) { if (d && (d.online > 0 || (d.hot && d.hot.length))) render(d); else box.innerHTML=''; })
-      .catch(function () {});
+      .then(function (d) { render(d || {}); })
+      .catch(function () { render({}); });
   }
   poll();
   setInterval(poll, 15000);

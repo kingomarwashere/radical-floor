@@ -16,10 +16,17 @@ const state = {
 };
 
 // ---- identity -------------------------------------------------------------
+function cookieUid() {
+  const m = document.cookie.match(/(?:^|;\s*)radical_uid=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
 function storedUid() {
+  // Priority: explicit ?uid= link → shared cross-subdomain cookie → last used.
   const u = new URL(location.href);
   const q = u.searchParams.get('uid');
   if (q) { localStorage.setItem('floor_uid', q); return q; }
+  const ck = cookieUid();
+  if (ck) { localStorage.setItem('floor_uid', ck); return ck; }
   return localStorage.getItem('floor_uid');
 }
 
