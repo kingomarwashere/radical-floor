@@ -1,0 +1,47 @@
+name = "radical-floor"
+main = "src/worker.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Custom domain — floor.theradicalparty.com
+[[routes]]
+pattern = "floor.theradicalparty.com"
+zone_name = "theradicalparty.com"
+custom_domain = true
+
+# Serve the SPA + widget from /public, but let the Worker handle API/WS first
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/ws", "/api/*"]
+
+# Durable Objects: one Room per channel, one Directory singleton
+[durable_objects]
+bindings = [
+  { name = "ROOMS", class_name = "Room" },
+  { name = "DIRECTORY", class_name = "Directory" },
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room", "Directory"]
+
+# The Floor's own D1 — message archive + room registry
+[[d1_databases]]
+binding = "DB"
+database_name = "radical-floor-db"
+database_id = "d8e89e28-07d0-42af-a567-0a305e06295c"
+
+# The main direct-democracy platform DB — shared identity + proposals + votes
+[[d1_databases]]
+binding = "RADICAL_DB"
+database_name = "radical-db"
+database_id = "1f2a5273-bfcb-45c8-a759-5d675c05620c"
+
+[vars]
+ENVIRONMENT = "production"
+MAIN_SITE = "https://theradicalparty.com"
+
+[observability.logs]
+enabled = true

@@ -1,0 +1,13 @@
+{
+  "name": "radical-floor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Floor — the live debate floor for theradicalparty.com direct democracy",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute radical-floor-db --remote --file=./schema.sql",
+    "db:init:local": "wrangler d1 execute radical-floor-db --local --file=./schema.sql"
+  }
+}

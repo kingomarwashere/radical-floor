@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>The Floor — Radical</title>
+<meta name="description" content="The live debate floor of Australia's direct democracy. Argue proposals in real time, then vote." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --red:#FF2D55; --pink:#FF6B82; --gold:#c9a84c;
+    --bg:#0B0B09; --raised:#12100d; --raised2:#1a1712;
+    --cream:#F0EDE6; --muted:#9c948a; --line:#241f18;
+    --deep:#c81e3a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg); color:var(--cream);
+    font-family:system-ui,-apple-system,Inter,sans-serif;
+    -webkit-font-smoothing:antialiased; overflow:hidden;
+  }
+  a{color:var(--pink);text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none}
+  .mono{font-family:'IBM Plex Mono',monospace}
+  .syne{font-family:'Syne',sans-serif;font-weight:800}
+
+  #app{display:flex;flex-direction:column;height:100dvh}
+
+  /* ---- top bar ---- */
+  header{
+    display:flex;align-items:center;gap:14px;
+    padding:12px 16px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,var(--raised),transparent);
+  }
+  .brand{font-family:'Syne';font-weight:800;font-size:20px;letter-spacing:-.5px}
+  .brand b{color:var(--red)}
+  .brand small{display:block;font-family:'IBM Plex Mono';font-weight:400;font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:-2px}
+  .spacer{flex:1}
+  .pill{
+    font-family:'IBM Plex Mono';font-size:12px;color:var(--muted);
+    background:var(--raised2);border:1px solid var(--line);
+    padding:5px 10px;border-radius:100px;display:flex;align-items:center;gap:7px;white-space:nowrap;
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:#3ad07a;box-shadow:0 0 8px #3ad07a}
+  .whoami{display:flex;align-items:center;gap:8px}
+  .avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;background:var(--raised2);border:1px solid var(--line);display:grid;place-items:center;font-size:14px}
+
+  /* ---- body layout ---- */
+  main{flex:1;display:flex;min-height:0}
+  aside{
+    width:280px;border-right:1px solid var(--line);
+    display:flex;flex-direction:column;min-height:0;background:var(--raised);
+  }
+  .aside-h{padding:14px 16px 8px;font-family:'IBM Plex Mono';font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+  .rooms{overflow:auto;flex:1;padding:0 8px 8px}
+  .room{
+    display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+    background:transparent;color:var(--cream);padding:10px 12px;border-radius:10px;
+    border:1px solid transparent;font-size:14px;margin-bottom:2px;
+  }
+  .room:hover{background:var(--raised2)}
+  .room.active{background:var(--raised2);border-color:var(--red)}
+  .room .hash{color:var(--red);font-weight:700}
+  .room .rt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .room .cnt{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);background:#00000040;padding:2px 7px;border-radius:100px}
+  .room .cnt.live{color:var(--bg);background:var(--red);font-weight:700}
+  .aside-foot{padding:12px;border-top:1px solid var(--line)}
+  .btn{
+    display:block;width:100%;text-align:center;background:var(--red);color:#fff;
+    font-weight:700;padding:11px;border-radius:10px;font-size:14px;
+  }
+  .btn:hover{background:var(--deep)}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);margin-top:8px;font-weight:500}
+  .btn.ghost:hover{color:var(--cream);border-color:var(--red)}
+
+  /* ---- chat column ---- */
+  .chat{flex:1;display:flex;flex-direction:column;min-width:0}
+  .chat-h{padding:12px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px}
+  .chat-title{font-family:'Syne';font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px;min-width:0}
+  .chat-title .hash{color:var(--red)}
+  .chat-title span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topic{font-size:12px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:520px}
+
+  /* proposal tally banner */
+  .tally{
+    display:none;align-items:center;gap:16px;margin-left:auto;
+    background:var(--raised2);border:1px solid var(--line);border-radius:12px;padding:8px 14px;
+  }
+  .tally.show{display:flex}
+  .tally .n{font-family:'IBM Plex Mono';font-weight:700;font-size:16px}
+  .tally .up{color:#3ad07a}.tally .down{color:var(--pink)}
+  .tally .lbl{font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;display:block;text-align:center}
+  .vote-btn{background:var(--red);color:#fff;font-weight:700;padding:9px 16px;border-radius:10px;font-size:13px;white-space:nowrap}
+  .vote-btn:hover{background:var(--deep)}
+
+  .stream{flex:1;overflow:auto;padding:18px 20px;display:flex;flex-direction:column;gap:2px}
+  .msg{display:flex;gap:12px;padding:5px 8px;border-radius:8px}
+  .msg:hover{background:#ffffff08}
+  .msg .av{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:var(--raised2);border:1px solid var(--line);display:grid;place-items:center;font-size:16px;object-fit:cover}
+  .msg .who{font-weight:700;font-size:14px}
+  .msg .t{font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);margin-left:8px}
+  .msg .body{font-size:15px;line-height:1.45;color:#e9e5dd;word-break:break-word}
+  .msg.cont{padding-top:0}
+  .msg.cont .av{visibility:hidden;height:0}
+  .msg.sys{justify-content:center;color:var(--muted);font-size:12px;font-family:'IBM Plex Mono'}
+  .msg.sys .body{color:var(--muted);text-align:center}
+
+  .typing{height:20px;padding:0 24px 4px;font-size:12px;color:var(--muted);font-style:italic}
+
+  .composer{padding:12px 20px 18px;border-top:1px solid var(--line)}
+  .cbox{display:flex;gap:10px;align-items:flex-end;background:var(--raised2);border:1px solid var(--line);border-radius:14px;padding:8px 12px}
+  .cbox:focus-within{border-color:var(--red)}
+  .cbox textarea{flex:1;background:transparent;border:none;color:var(--cream);font-family:inherit;font-size:15px;resize:none;outline:none;max-height:120px;line-height:1.4;padding:6px 0}
+  .send{background:var(--red);color:#fff;border-radius:10px;width:40px;height:40px;font-size:18px;flex-shrink:0}
+  .send:hover{background:var(--deep)}
+  .hint{font-size:11px;color:var(--muted);margin-top:6px;font-family:'IBM Plex Mono'}
+  .hint b{color:var(--gold)}
+
+  /* reactions floaty */
+  #reacts{position:fixed;bottom:90px;right:40px;pointer-events:none;z-index:50}
+  .rfloat{position:absolute;font-size:28px;animation:rise 1.8s ease-out forwards}
+  @keyframes rise{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-160px);opacity:0}}
+
+  /* modal */
+  .modal{position:fixed;inset:0;background:#000000c0;display:none;place-items:center;z-index:100;padding:20px}
+  .modal.show{display:grid}
+  .card{background:var(--raised);border:1px solid var(--line);border-radius:18px;padding:26px;max-width:440px;width:100%}
+  .card h2{font-family:'Syne';font-weight:800;margin:0 0 6px}
+  .card p{color:var(--muted);font-size:14px;margin:0 0 16px}
+  .card textarea,.card input{width:100%;background:var(--raised2);border:1px solid var(--line);border-radius:10px;color:var(--cream);font-family:inherit;font-size:15px;padding:12px;outline:none;resize:none}
+  .card textarea:focus,.card input:focus{border-color:var(--red)}
+  .counter{text-align:right;font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);margin:6px 2px 14px}
+  .row{display:flex;gap:10px}
+  .row .btn{flex:1}
+
+  /* gate / signin */
+  #gate .card{text-align:center}
+  #gate .logo{font-family:'Syne';font-weight:800;font-size:34px;margin-bottom:2px}
+  #gate .logo b{color:var(--red)}
+
+  @media(max-width:760px){
+    aside{position:absolute;z-index:20;height:calc(100dvh - 56px);transform:translateX(-100%);transition:.2s}
+    aside.open{transform:none}
+    .tally{display:none!important}
+    #menuBtn{display:grid!important}
+    .topic{max-width:200px}
+  }
+  #menuBtn{display:none;background:var(--raised2);border:1px solid var(--line);color:var(--cream);width:38px;height:38px;border-radius:10px;place-items:center;font-size:18px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button id="menuBtn">☰</button>
+    <div class="brand">THE <b>FLOOR</b><small>VIBE · VOTE · VETO</small></div>
+    <div class="spacer"></div>
+    <div class="pill" id="onlinePill"><span class="dot"></span><span id="onlineN">—</span> on the floor</div>
+    <div class="whoami"><div class="avatar" id="meAv">✊</div></div>
+  </header>
+
+  <main>
+    <aside id="aside">
+      <div class="aside-h">Channels</div>
+      <div class="rooms" id="roomList"></div>
+      <div class="aside-foot">
+        <button class="btn" id="proposeBtn">＋ Propose &amp; debate</button>
+        <a class="btn ghost" href="https://theradicalparty.com" target="_blank">← Back to proposals</a>
+      </div>
+    </aside>
+
+    <section class="chat">
+      <div class="chat-h">
+        <div style="min-width:0">
+          <div class="chat-title"><span class="hash">#</span><span id="roomName">square</span></div>
+          <div class="topic" id="roomTopic">the town square — everyone's here</div>
+        </div>
+        <div class="tally" id="tally">
+          <div><span class="n up" id="tUp">0</span><span class="lbl">for</span></div>
+          <div><span class="n down" id="tDown">0</span><span class="lbl">against</span></div>
+          <div><span class="n" style="color:var(--gold)" id="tPet">0</span><span class="lbl">signed</span></div>
+          <a class="vote-btn" id="voteBtn" target="_blank">Vote / Sign →</a>
+        </div>
+      </div>
+
+      <div class="stream" id="stream"></div>
+      <div class="typing" id="typing"></div>
+
+      <div class="composer">
+        <div class="cbox">
+          <textarea id="input" rows="1" placeholder="Say something to the floor…  (try /propose your idea)"></textarea>
+          <button class="send" id="sendBtn">➤</button>
+        </div>
+        <div class="hint">Enter to send · <b>/propose &lt;idea&gt;</b> puts it to a vote · ✊👏🔥 double-tap a message to react</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="reacts"></div>
+
+<!-- propose modal -->
+<div class="modal" id="proposeModal">
+  <div class="card">
+    <h2>Put it to the floor</h2>
+    <p>This posts a real proposal to theradicalparty.com and opens a live debate room for it.</p>
+    <textarea id="propText" rows="3" maxlength="280" placeholder="e.g. Free public transport for under-25s"></textarea>
+    <div class="counter"><span id="propCount">0</span>/280</div>
+    <div class="row">
+      <button class="btn ghost" id="propCancel">Cancel</button>
+      <button class="btn" id="propSubmit">Propose →</button>
+    </div>
+  </div>
+</div>
+
+<!-- sign-in gate -->
+<div class="modal" id="gate">
+  <div class="card">
+    <div class="logo">THE <b>FLOOR</b></div>
+    <p>The live debate floor of Australia's direct democracy.</p>
+    <p style="color:var(--cream)">Sign in on the main platform, then come back — your identity carries over.</p>
+    <a class="btn" href="https://theradicalparty.com" style="margin-bottom:8px">Sign in on theradicalparty.com</a>
+    <button class="btn ghost" id="gateRetry">I'm signed in — enter the floor</button>
+    <div class="hint" style="margin-top:14px">Dev: append <b>?uid=YOUR_ID</b> to the URL to enter directly.</div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
